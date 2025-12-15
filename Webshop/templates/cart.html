@@ -1,0 +1,47 @@
+{% extends "base.html" %} {% block content %}
+
+<h1 class="page-title">Winkelwagen</h1>
+
+{% if not cart_items %}
+<p class="empty-cart">Je winkelwagen is leeg.</p>
+{% else %}
+
+<table class="cart-table">
+  <thead>
+    <tr>
+      <th>Product</th>
+      <th>Prijs</th>
+      <th>Aantal</th>
+      <th>Totaal</th>
+      <th>Actie</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for item, quantity in cart_items %}
+    <tr>
+      <td>{{ item[1] }}</td>
+      <td>€{{ "%.2f"|format(item[2]) }}</td>
+
+      <td>
+        <a href="/decrease_quantity/{{ item[0] }}" class="btn-small">−</a>
+        <span style="margin: 0 10px">{{ quantity }}</span>
+        <a href="/increase_quantity/{{ item[0] }}" class="btn-small">+</a>
+      </td>
+
+      <td>€{{ "%.2f"|format(item[2] * quantity) }}</td>
+
+      <td>
+       
+        
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="cart-total">
+  <h2>Totaal: €{{ "%.2f"|format(total) }}</h2>
+</div>
+
+{% endif %} {% endblock %}

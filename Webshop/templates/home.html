@@ -1,0 +1,23 @@
+{% extends "base.html" %} {% block content %}
+
+<h1 class="page-title">Producten</h1>
+
+<div class="product-grid">
+  {% for product in products %}
+  <div class="product-card">
+    <h2>{{ product[1] }}</h2>
+    <p class="price">€{{ "%.2f"|format(product[2]) }}</p>
+    <form
+      action="/add_to_cart/{{ product[0] }}"
+      method="GET"
+      style="display: inline"
+    >
+      <button type="button" class="btn" data-product-name="{{ product[1] }}">
+        Toevoegen aan winkelwagen
+      </button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
