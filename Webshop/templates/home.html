@@ -1,4 +1,12 @@
-{% extends "base.html" %} {% block content %}
+<!--
+home.html laat alle producten zien
+- Extends base.html
+- Loop door producten uit database
+- Voor elk product: naam, prijs en “Toevoegen aan winkelwagen” knop
+- De knop wordt met JavaScript interactive gemaakt (meldingen)
+-->
+{% extends "base.html" %}
+{% block content %}
 
 <h1 class="page-title">Producten</h1>
 
@@ -7,14 +15,9 @@
   <div class="product-card">
     <h2>{{ product[1] }}</h2>
     <p class="price">€{{ "%.2f"|format(product[2]) }}</p>
-    <form
-      action="/add_to_cart/{{ product[0] }}"
-      method="GET"
-      style="display: inline"
-    >
-      <button type="button" class="btn" data-product-name="{{ product[1] }}">
-        Toevoegen aan winkelwagen
-      </button>
+
+    <form action="/add_to_cart/{{ product[0] }}" method="GET">
+      <button type="button" class="btn">Toevoegen aan winkelwagen</button>
     </form>
   </div>
   {% endfor %}

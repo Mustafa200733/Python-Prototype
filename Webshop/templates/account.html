@@ -1,43 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-  </head>
-  <body>
-    {% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
 
-    <h1 class="page-title">Mijn Account</h1>
+<!--
+- Formulier toont huidige username & password
+- POST → verstuurt nieuwe gegevens naar /account
+- Als gegevens aangepast → toont succesmelding
+-->
 
-    <div class="form-container">
-      {% if message %}
-      <p class="success-message">{{ message }}</p>
-      {% endif %}
+{% block content %}
 
-      <form action="/account" method="POST">
-        <label for="username">Gebruikersnaam</label>
-        <input
-          type="text"
-          id="username"
-          name="username"
-          value="{{ user }}"
-          required
-        />
 
-        <label for="password">Wachtwoord</label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          value="{{ password }}"
-          required
-        />
+  <h1 class="page-title">Mijn Account</h1>
 
-        <button type="submit" class="btn-blue">Gegevens opslaan</button>
-      </form>
-    </div>
 
-    {% endblock %}
-  </body>
-</html>
+  <div class="form-container">
+
+    {% if message %}
+
+    <p class="success-message">{{ message }}</p>
+
+    {% endif %}
+
+    <form action="/account" method="POST">
+
+      <label for="username">Gebruikersnaam</label>
+
+      <input type="text" id="username" name="username" value="{{ user }}" required />
+
+      <label for="password">Wachtwoord</label>
+
+      <input type="password" id="password" name="password" value="{{ password }}" required />
+
+      <button type="submit" class="btn-blue">Gegevens opslaan</button>
+
+    </form>
+
+  </div>
+
+<!-- Einde content -->
+{% endblock %}

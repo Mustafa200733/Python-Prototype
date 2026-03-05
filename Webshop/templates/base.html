@@ -1,3 +1,5 @@
+<!-- base.html: de basis-layout voor alle pagina's -->
+
 <!DOCTYPE html>
 <html lang="nl">
   <head>
@@ -5,18 +7,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Webshop Prototype</title>
 
-    <!-- CSS -->
+    <!-- Koppelt het CSS-bestand uit de static-map -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='style.css') }}"
     />
 
-    <!-- Icons (Font Awesome CDN) -->
+    <!-- Font Awesome voor iconen -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
   </head>
+
   <body>
     <!-- NAVBAR -->
     <nav class="navbar">
@@ -30,15 +33,9 @@
 
       <div class="nav-right">
         {% if session.get('user') %}
-        <a href="/contact" class="nav-icon"
-          ><i class="fa fa-envelope"></i> Contact</a
-        >
-        <a href="/account" class="nav-icon"
-          ><i class="fa fa-user"></i> Account</a
-        >
-        <a href="/cart" class="nav-icon"
-          ><i class="fa fa-shopping-cart"></i> Winkelwagen</a
-        >
+        <a href="/contact" class="nav-icon"><i class="fa fa-envelope"></i> Contact</a>
+        <a href="/account" class="nav-icon"><i class="fa fa-user"></i> Account</a>
+        <a href="/cart" class="nav-icon"><i class="fa fa-shopping-cart"></i> Winkelwagen</a>
         <a href="/logout" class="btn-logout">Uitloggen</a>
         {% else %}
         <a href="/login" class="btn-login">Inloggen</a>
@@ -46,15 +43,18 @@
       </div>
     </nav>
 
-    <!-- PAGINA CONTENT -->
-    <main>{% block content %} {% endblock %}</main>
+    <!-- PAGINA-INHOUD -->
+    <main>
+      {% block content %}
+      {% endblock %}
+    </main>
 
     <!-- FOOTER -->
     <footer>
       <p>© 2025 Webshop Prototype</p>
     </footer>
 
-    <!-- JS -->
+    <!-- JavaScript -->
     <script src="{{ url_for('static', filename='main.js') }}"></script>
   </body>
 </html>

@@ -1,4 +1,11 @@
-{% extends "base.html" %} {% block content %}
+<!--
+login.html toont een inlogformulier.
+- Extends base.html → gebruikt de navbar/footer van base.html
+- POST formulier → verstuurt username & password naar /login
+- Als gebruiker succesvol inlogt, wordt session['user'] gezet
+-->
+{% extends "base.html" %}
+{% block content %}
 
 <h1 class="page-title">Inloggen</h1>
 
@@ -15,3 +22,4 @@
 </div>
 
 {% endblock %}
+

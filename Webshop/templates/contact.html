@@ -1,4 +1,11 @@
-{% extends "base.html" %} {% block content %}
+<!--
+contact.html laat gebruikers een bericht sturen
+- Extends base.html
+- Formulier met naam, email en bericht
+- POST → /contact → laat popup zien “Bericht is succesvol verstuurd”
+-->
+{% extends "base.html" %}
+{% block content %}
 
 <h1 class="page-title">Contact</h1>
 
@@ -20,7 +27,7 @@
 {% endif %}
 
 <div class="form-container">
-  <form action="/contact" method="POST" id="contactForm">
+  <form action="/contact" method="POST">
     <label for="name">Naam</label>
     <input type="text" id="name" name="name" required />
 

@@ -1,146 +1,167 @@
+
 from flask import Flask, render_template, request, redirect, url_for, session, g
+import os
+
 import sqlite3
 
 
-app = Flask(__name__, template_folder='../templates', static_folder='../static')
-app.secret_key = "geheimesleutel"
+app = Flask(__name__, template_folder="../templates", static_folder="../static")
 
-DATABASE = "shop.db"
-
-def get_db():
-    db = getattr(g, "_database", None)
-    if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
-    return db
-
-from flask import Flask, render_template, request, redirect, url_for, session, g
-import sqlite3
+app.secret_key = os.getenv("SECRET_KEY", "dev-secret-change-me")
 
 
-app = Flask(__name__, template_folder='../templates', static_folder='../static')
-app.secret_key = "geheimesleutel"
+DATABASE = os.path.join(os.path.dirname(__file__), "shop.db")
 
-DATABASE = "shop.db"
+
 
 def get_db():
-    db = getattr(g, "_database", None)
-    if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
-    return db
+    if "_database" not in g:
+        g._database = sqlite3.connect(DATABASE)
+    return g._database
+
+
 
 @app.teardown_appcontext
 def close_connection(exception):
-    db = getattr(g, "_database", None)
+    db = g.pop("_database", None)
+
     if db is not None:
         db.close()
 
 
+
 def init_db():
     with app.app_context():
+
         db = get_db()
         cursor = db.cursor()
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE,
-                password TEXT
+                username TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL
             )
         """)
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS products (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT,
-                price REAL
+                name TEXT NOT NULL,
+                price REAL NOT NULL
             )
         """)
 
         cursor.execute("SELECT COUNT(*) FROM products")
+
         if cursor.fetchone()[0] == 0:
             cursor.executemany(
                 "INSERT INTO products (name, price) VALUES (?, ?)",
-                [("Laptop", 999.99), ("Headset", 59.99), ("Muis", 29.99)]
+                [
+                    ("Laptop", 999.99),
+                    ("Headset", 59.99),
+                    ("Muis", 29.99)
+                ]
             )
+
         cursor.execute("SELECT COUNT(*) FROM users")
+
         if cursor.fetchone()[0] == 0:
             cursor.execute(
                 "INSERT INTO users (username, password) VALUES (?, ?)",
                 ("admin", "1234")
             )
+
         db.commit()
+
 
 init_db()
 
 
-@app.route('/')
+
+@app.route("/")
 def index():
-    return redirect(url_for('login'))
+    return redirect(url_for("login"))
 
 
-@app.route('/home')
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+
+        username = request.form["username"]
+        password = request.form["password"]
+
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT * FROM users WHERE username=? AND password=?",
+            (username, password)
+        )
+        user = cursor.fetchone()
+
+        if user:
+            session["user"] = username
+            session["cart"] = {}  # lege winkelwagen
+            return redirect(url_for("home"))
+        else:
+            return "Onjuiste login!"
+
+    return render_template("login.html")
+
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+
+@app.route("/home")
 def home():
     if "user" not in session:
-        return redirect(url_for('login'))
+        return redirect(url_for("login"))
 
+    # Producten ophalen uit database
     db = get_db()
     cursor = db.cursor()
     cursor.execute("SELECT * FROM products")
     products = cursor.fetchall()
-    return render_template('home.html', products=products, logged_in=('user' in session))
+
+    # Producten tonen in home.html
+    return render_template("home.html", products=products)
 
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+# =========================
+# WINKELWAGEN
+# =========================
 
-        db = get_db()
-        cursor = db.cursor()
-        cursor.execute('SELECT * FROM users WHERE username=? AND password=?', (username, password))
-        user = cursor.fetchone()
-
-        if user:
-            session['user'] = username
-            return redirect(url_for('account'))
-        else:
-            return 'Onjuiste login!'
-
-    return render_template('login.html')
-
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    return redirect(url_for('login'))
-
-
-@app.route('/add_to_cart/<int:product_id>')
+# Product toevoegen aan winkelwagen
+@app.route("/add_to_cart/<int:product_id>")
 def add_to_cart(product_id):
-    if 'user' not in session:
-        return redirect(url_for('login'))
+    if "user" not in session:
+        return redirect(url_for("login"))
 
-    if 'cart' not in session:
-        session['cart'] = {}
-    if isinstance(session['cart'], list):
-        new_cart = {}
-        for pid in session['cart']:
-            key = str(pid)
-            new_cart[key] = new_cart.get(key, 0) + 1
-        session['cart'] = new_cart
+    # Winkelwagen ophalen of nieuwe maken
+    cart = session.get("cart", {})
 
-    pid_key = str(product_id)
-    session['cart'][pid_key] = session['cart'].get(pid_key, 0) + 1
+    # Product ID als string gebruiken
+    key = str(product_id)
+
+    # Aantal verhogen
+    cart[key] = cart.get(key, 0) + 1
+
+    # Opslaan in session
+    session["cart"] = cart
     session.modified = True
 
-    return redirect(url_for('home'))
+    return redirect(url_for("home"))
 
 
-@app.route('/cart')
+# Winkelwagen bekijken
+@app.route("/cart")
 def cart():
-    if 'user' not in session:
-        return redirect(url_for('login'))
+    if "user" not in session:
+        return redirect(url_for("login"))
 
     db = get_db()
     cursor = db.cursor()
@@ -148,144 +169,111 @@ def cart():
     cart_items = []
     total = 0
 
-    if 'cart' in session:
-        cart_data = session['cart']
-        if isinstance(cart_data, list):
-            counts = {}
-            for pid in cart_data:
-                counts[str(pid)] = counts.get(str(pid), 0) + 1
-            cart_data = counts
-            session['cart'] = cart_data
+    # Door alle producten in de winkelwagen lopen
+    for pid, qty in session.get("cart", {}).items():
+        cursor.execute("SELECT * FROM products WHERE id=?", (int(pid),))
+        product = cursor.fetchone()
 
-        for pid_str, quantity in cart_data.items():
-            try:
-                cursor.execute('SELECT * FROM products WHERE id=?', (int(pid_str),))
-            except Exception:
-                continue
-            product = cursor.fetchone()
-            if product:
-                cart_items.append((product, quantity))
-                total += product[2] * quantity
+        if product:
+            cart_items.append((product, qty))
+            total += product[2] * qty
 
-    return render_template('cart.html', cart_items=cart_items, total=total)
+    return render_template("cart.html", cart_items=cart_items, total=total)
 
 
-@app.route('/contact', methods=['GET', 'POST'])
-def contact():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-
-    if request.method == 'POST':
-        return render_template('contact.html', message_sent=True)
-
-    return render_template('contact.html')
-
-
-@app.route('/remove_from_cart/<int:product_id>')
-def remove_from_cart(product_id):
-    if 'user' not in session:
-        return redirect(url_for('login'))
-
-    if 'cart' in session:
-        cart = session['cart']
-        if isinstance(cart, dict):
-            key = str(product_id)
-            if key in cart:
-                del cart[key]
-                session['cart'] = cart
-                session.modified = True
-        else:
-            try:
-                cart.remove(product_id)
-                session['cart'] = cart
-                session.modified = True
-            except ValueError:
-                pass
-
-    return redirect(url_for('cart'))
-
-
-@app.route('/clear_cart')
-def clear_cart():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-    session['cart'] = {}
-    session.modified = True
-    return redirect(url_for('cart'))
-
-
-@app.route('/increase_quantity/<int:product_id>')
+# Aantal verhogen
+@app.route("/increase_quantity/<int:product_id>")
 def increase_quantity(product_id):
-    if 'user' not in session:
-        return redirect(url_for('login'))
-
-    if 'cart' in session:
-        cart = session['cart']
-        if isinstance(cart, list):
-            new_cart = {}
-            for pid in cart:
-                new_cart[str(pid)] = new_cart.get(str(pid), 0) + 1
-            cart = new_cart
-        key = str(product_id)
-        cart[key] = cart.get(key, 0) + 1
-        session['cart'] = cart
-        session.modified = True
-
-    return redirect(url_for('cart'))
+    cart = session.get("cart", {})
+    key = str(product_id)
+    cart[key] = cart.get(key, 0) + 1
+    session["cart"] = cart
+    session.modified = True
+    return redirect(url_for("cart"))
 
 
-@app.route('/decrease_quantity/<int:product_id>')
+# Aantal verlagen
+@app.route("/decrease_quantity/<int:product_id>")
 def decrease_quantity(product_id):
-    if 'user' not in session:
-        return redirect(url_for('login'))
+    cart = session.get("cart", {})
+    key = str(product_id)
 
-    if 'cart' in session:
-        cart = session['cart']
-        if isinstance(cart, list):
-            new_cart = {}
-            for pid in cart:
-                new_cart[str(pid)] = new_cart.get(str(pid), 0) + 1
-            cart = new_cart
-        key = str(product_id)
-        if key in cart:
-            if cart[key] > 1:
-                cart[key] -= 1
-            else:
-                del cart[key]
-            session['cart'] = cart
-            session.modified = True
+    if key in cart:
+        if cart[key] > 1:
+            cart[key] -= 1
+        else:
+            del cart[key]
 
-    return redirect(url_for('cart'))
+    session["cart"] = cart
+    session.modified = True
+    return redirect(url_for("cart"))
 
 
-@app.route('/account', methods=['GET', 'POST'])
+# Winkelwagen leegmaken
+@app.route("/clear_cart")
+def clear_cart():
+    session["cart"] = {}
+    session.modified = True
+    return redirect(url_for("cart"))
+
+
+# =========================
+# ACCOUNT
+# =========================
+@app.route("/account", methods=["GET", "POST"])
 def account():
-    if 'user' not in session:
-        return redirect(url_for('login'))
+    if "user" not in session:
+        return redirect(url_for("login"))
 
     db = get_db()
     cursor = db.cursor()
 
-    if request.method == 'POST':
-        new_username = request.form.get('username')
-        new_password = request.form.get('password')
-        username = session['user']
+    # Gegevens opslaan
+    if request.method == "POST":
+        new_username = request.form["username"]
+        new_password = request.form["password"]
 
-        cursor.execute('UPDATE users SET username=?, password=? WHERE username=?', (new_username, new_password, username))
+        cursor.execute(
+            "UPDATE users SET username=?, password=? WHERE username=?",
+            (new_username, new_password, session["user"])
+        )
         db.commit()
 
-        session['user'] = new_username
-        session.modified = True
-        return render_template('account.html', user=new_username, password=new_password, message='Gegevens opgeslagen!')
+        session["user"] = new_username
 
-    cursor.execute('SELECT username, password FROM users WHERE username=?', (session['user'],))
-    user_data = cursor.fetchone()
+        return render_template(
+            "account.html",
+            user=new_username,
+            password=new_password,
+            message="Gegevens opgeslagen!"
+        )
 
-    if user_data:
-        return render_template('account.html', user=user_data[0], password=user_data[1])
-    else:
-        return redirect(url_for('login'))
+    # Accountgegevens ophalen
+    cursor.execute(
+        "SELECT username, password FROM users WHERE username=?",
+        (session["user"],)
+    )
+    user = cursor.fetchone()
+
+    return render_template("account.html", user=user[0], password=user[1])
 
 
-if __name__ == '__main__':
+# =========================
+# CONTACT
+# =========================
+@app.route("/contact", methods=["GET", "POST"])
+def contact():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        return render_template("contact.html", message_sent=True)
+
+    return render_template("contact.html")
+
+
+# =========================
+# APP STARTEN
+# =========================
+if __name__ == "__main__":
     app.run(debug=True)
