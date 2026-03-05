@@ -1,5 +1,5 @@
 
-from flask import Flask, render_template, request, redirect, url_for, session, g
+from flask import Flask, render_template, request, redirect, url_for, session, g, flash
 import os
 
 import sqlite3
@@ -103,6 +103,7 @@ def login():
         if user:
             session["user"] = username
             session["cart"] = {}  # lege winkelwagen
+            flash("Je bent ingelogd.", "success")
             return redirect(url_for("home"))
         else:
             error = "Onjuiste gebruikersnaam of wachtwoord."
@@ -139,6 +140,7 @@ def register():
 
         session["user"] = username
         session["cart"] = {}
+        flash("Je account is aangemaakt.", "success")
         return redirect(url_for("home"))
 
     return render_template("register.html", error=error)
@@ -148,6 +150,7 @@ def register():
 @app.route("/logout")
 def logout():
     session.clear()
+    flash("Je bent uitgelogd.", "info")
     return redirect(url_for("login"))
 
 
@@ -239,6 +242,17 @@ def decrease_quantity(product_id):
         else:
             del cart[key]
 
+    session["cart"] = cart
+    session.modified = True
+    return redirect(url_for("cart"))
+
+
+@app.route("/remove_from_cart/<int:product_id>")
+def remove_from_cart(product_id):
+    cart = session.get("cart", {})
+    key = str(product_id)
+    if key in cart:
+        del cart[key]
     session["cart"] = cart
     session.modified = True
     return redirect(url_for("cart"))

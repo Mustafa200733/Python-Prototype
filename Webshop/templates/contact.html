@@ -1,44 +1,46 @@
-<!--
-contact.html laat gebruikers een bericht sturen
-- Extends base.html
-- Formulier met naam, email en bericht
-- POST → /contact → laat popup zien “Bericht is succesvol verstuurd”
--->
 {% extends "base.html" %}
 {% block content %}
 
 <h1 class="page-title">Contact</h1>
 
-<p>Neem contact met ons op via e-mail of telefoon:</p>
-<ul>
-  <li>Email: support@webshop.nl</li>
-  <li>Telefoon: 0123-456789</li>
-</ul>
-
 {% if message_sent %}
 <div id="successPopup" class="success-popup">
-  <p>✓ Bericht is succesvol verstuurd!</p>
+  <p>Bericht is succesvol verstuurd!</p>
 </div>
-<script>
-  setTimeout(function () {
-    document.getElementById("successPopup").style.display = "none";
-  }, 3000);
-</script>
 {% endif %}
 
-<div class="form-container">
-  <form action="/contact" method="POST">
-    <label for="name">Naam</label>
-    <input type="text" id="name" name="name" required />
+<section class="contact-layout">
+  <article class="contact-card">
+    <h2>Neem contact met ons op</h2>
+    <p class="contact-intro">
+      We helpen je graag. Je kunt ons bereiken via e-mail of telefoon.
+    </p>
 
-    <label for="email">E-mail</label>
-    <input type="email" id="email" name="email" required />
+    <div class="contact-item">
+      <span class="contact-label">E-mail</span>
+      <a href="mailto:support@webshop.nl">support@webshop.nl</a>
+    </div>
 
-    <label for="message">Bericht</label>
-    <textarea id="message" name="message" rows="5" required></textarea>
+    <div class="contact-item">
+      <span class="contact-label">Telefoon</span>
+      <a href="tel:+31123456789">0123-456789</a>
+    </div>
+  </article>
 
-    <button type="submit" class="btn-blue">Verstuur</button>
-  </form>
-</div>
+  <div class="form-container">
+    <form action="/contact" method="POST">
+      <label for="name">Naam</label>
+      <input type="text" id="name" name="name" required />
+
+      <label for="email">E-mail</label>
+      <input type="email" id="email" name="email" required />
+
+      <label for="message">Bericht</label>
+      <textarea id="message" name="message" rows="5" required></textarea>
+
+      <button type="submit" class="btn-blue">Verstuur</button>
+    </form>
+  </div>
+</section>
 
 {% endblock %}

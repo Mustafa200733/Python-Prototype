@@ -1,21 +1,3 @@
-// “Eerst wacht JavaScript tot de pagina helemaal geladen is.
-// Dan zoekt het alle knoppen om een product toe te voegen.
-// Bij een klik stopt hij even het formulier, toont een melding
-// en verstuurt daarna het formulier alsnog.”
-
-
-
-
-
-// “Deze code wacht eerst tot de pagina helemaal geladen is.
-// Daarna zoekt hij alle knoppen waarmee je een product kunt toevoegen.
-// Bij een klik wordt het formulier tijdelijk gestopt.
-// De productnaam wordt opgehaald en er verschijnt een melding.
-// Na een korte vertraging wordt het formulier alsnog verstuurd.”
-// WACHT TOT DE PAGINA KLAAR IS
-// =========================
-// Deze code start pas als de hele pagina is geladen
-
 document.addEventListener("DOMContentLoaded", function() {
 
     // Zoek alle "Toevoegen aan winkelwagen" knoppen
@@ -90,6 +72,16 @@ function showNotification(message) {
         notification.remove();
     }, 5000);
 }
+
+// Sluit toast-meldingen automatisch na enkele seconden.
+document.addEventListener("DOMContentLoaded", function () {
+    const toasts = document.querySelectorAll(".flash-toast, .success-popup");
+    toasts.forEach(function (toast) {
+        setTimeout(function () {
+            toast.remove();
+        }, 3500);
+    });
+});
 
 
 // FORMULIER CONTROLEREN
