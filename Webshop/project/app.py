@@ -86,6 +86,7 @@ def index():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    error = None
     if request.method == "POST":
 
         username = request.form["username"]
@@ -104,9 +105,43 @@ def login():
             session["cart"] = {}  # lege winkelwagen
             return redirect(url_for("home"))
         else:
-            return "Onjuiste login!"
+            error = "Onjuiste gebruikersnaam of wachtwoord."
 
-    return render_template("login.html")
+    return render_template("login.html", error=error)
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    error = None
+
+    if request.method == "POST":
+        username = request.form["username"].strip()
+        password = request.form["password"]
+
+        if not username or not password:
+            error = "Vul gebruikersnaam en wachtwoord in."
+            return render_template("register.html", error=error)
+
+        db = get_db()
+        cursor = db.cursor()
+
+        cursor.execute("SELECT id FROM users WHERE username=?", (username,))
+        existing_user = cursor.fetchone()
+        if existing_user:
+            error = "Gebruikersnaam bestaat al."
+            return render_template("register.html", error=error)
+
+        cursor.execute(
+            "INSERT INTO users (username, password) VALUES (?, ?)",
+            (username, password),
+        )
+        db.commit()
+
+        session["user"] = username
+        session["cart"] = {}
+        return redirect(url_for("home"))
+
+    return render_template("register.html", error=error)
 
 
 

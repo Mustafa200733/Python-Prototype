@@ -1,23 +1,17 @@
-<!--
-login.html toont een inlogformulier.
-- Extends base.html → gebruikt de navbar/footer van base.html
-- POST formulier → verstuurt username & password naar /login
-- Als gebruiker succesvol inlogt, wordt session['user'] gezet
--->
 {% extends "base.html" %}
 {% block content %}
 
-<h1 class="page-title">Inloggen</h1>
+<h1 class="page-title">Registreren</h1>
 
 <div class="form-container">
-  <form action="/login" method="POST">
+  <form action="/register" method="POST">
     <label for="username">Gebruikersnaam</label>
     <input type="text" id="username" name="username" required />
 
     <label for="password">Wachtwoord</label>
     <input type="password" id="password" name="password" required />
 
-    <button type="submit" class="btn-blue">Inloggen</button>
+    <button type="submit" class="btn-blue">Account maken</button>
   </form>
 
   {% if error %}
@@ -25,10 +19,9 @@ login.html toont een inlogformulier.
   {% endif %}
 
   <p style="margin-top: 14px;">
-    Nog geen account?
-    <a href="{{ url_for('register') }}">Registreer hier</a>
+    Heb je al een account?
+    <a href="{{ url_for('login') }}">Log hier in</a>
   </p>
 </div>
 
 {% endblock %}
-
